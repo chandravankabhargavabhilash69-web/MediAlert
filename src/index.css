@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Custom healthcare branding palette rules */
+  --color-med-teal-50: #F0FDFA;
+  --color-med-teal-100: #CCFBF1;
+  --color-med-teal-600: #0D9488;
+  --color-med-teal-700: #0F766E;
+  --color-med-teal-800: #115E59;
+  
+  --color-med-blue-50: #EFF6FF;
+  --color-med-blue-600: #2563EB;
+  --color-med-blue-700: #1D4ED8;
+  
+  --color-med-emerald-500: #10B981;
+  --color-med-emerald-600: #059669;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-ripple: ripple 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.2), 0 0 0 10px rgba(15, 118, 110, 0.2), 0 0 0 30px rgba(15, 118, 110, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(15, 118, 110, 0.2), 0 0 0 30px rgba(15, 118, 110, 0.2), 0 0 0 50px rgba(15, 118, 110, 0);
+  }
+}
+
+/* Custom layout scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Smooth active-state outline accents */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-med-teal-600);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}

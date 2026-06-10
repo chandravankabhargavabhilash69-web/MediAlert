@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="mediloop-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E" />
+      <stop offset="50%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer glowing background effect (subtle) -> -->
+  <circle cx="250" cy="250" r="220" fill="none" stroke="url(#mediloop-grad)" stroke-width="4" stroke-opacity="0.15" />
+
+  <!-- Circular Recycling Loop arrows -->
+  <g transform="translate(250, 250)">
+    <!-- Arrow 1 (Circular Path) -->
+    <path d="M -110,-40 A 120,120 0 0,1 110,-40" fill="none" stroke="url(#mediloop-grad)" stroke-width="20" stroke-linecap="round" />
+    <polygon points="100,-48 120,-20 135,-52" fill="#2563EB" />
+
+    <!-- Arrow 2 (Circular Path) -->
+    <path d="M 110,40 A 120,120 0 0,1 -110,40" fill="none" stroke="url(#mediloop-grad)" stroke-width="20" stroke-linecap="round" />
+    <polygon points="-100,48 -120,20 -135,52" fill="#0F766E" />
+  </g>
+
+  <!-- Central Pill representation slanted -->
+  <g transform="translate(250, 250) rotate(-30)">
+    <!-- Capsule Left Half (Green-Teal) -->
+    <path d="M -60,-28 L 0,-28 A 28,28 0 0,1 0,28 L -60,28 A 28,28 0 0,1 -60,-28 Z" fill="#0F766E" />
+    <!-- Capsule Right Half (Blue) -->
+    <path d="M 0,-28 L 60,-28 A 28,28 0 0,1 60,28 L 0,28 A 28,28 0 0,1 0,-28 Z" fill="#2563EB" />
+    <!-- Capsule Highlight -->
+    <path d="M -50,-18 L 50,-18" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-opacity="0.3" />
+    
+    <!-- Dividing line between capsule halves -->
+    <line x1="0" y1="-28" x2="0" y2="28" stroke="#FFFFFF" stroke-width="4" stroke-opacity="0.5" />
+    
+    <!-- Healthcare Cross Accent (White) -->
+    <g transform="translate(0, 0) scale(0.8)">
+      <!-- Cross background shadow / accent -->
+      <path d="M -10,-30 L 10,-30 L 10,-10 L 30,-10 L 30,10 L 10,10 L 10,30 L -10,30 L -10,10 L -30,10 L -30,-10 L -10,-10 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+  
+  <!-- Modern clean branding text inside logo if needed, otherwise standalone icon -->
+</svg>
