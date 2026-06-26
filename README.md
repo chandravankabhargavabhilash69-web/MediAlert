@@ -47,5 +47,4 @@ For developer testing and preview, bypass manual inputs using these predefined c
   - **Password**: `123456`
 - **Administrator Session**:
   - **Username**: `AdminUser`
-  - **Password**: `Admin@123`
-  
+  - **Password**: `Admin@123
