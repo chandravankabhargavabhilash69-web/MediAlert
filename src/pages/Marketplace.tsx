@@ -4,23 +4,19 @@ import { useApp } from "../components/AppContext";
 import MedicineCard from "../components/MedicineCard";
 import MedicineForm from "../components/MedicineForm";
 import { Search, Map, SlidersHorizontal, PlusSquare, MapPin } from "lucide-react";
-
+import { apiClient } from "../utils/apiClient";
 export default function Marketplace() {
   const { currentUser, toast } = useApp();
-
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
-
   // Search/Filters states
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [sortBy, setSortBy] = useState("expiryDate"); // expiryDate, quantity, createdAt
-
   // Interactive Form visibility
   const [formOpen, setFormOpen] = useState(false);
-
   const fetchMedicines = async () => {
     setLoading(true);
     try {
@@ -29,8 +25,8 @@ export default function Marketplace() {
       if (selectedCategory) queryParams.append("category", selectedCategory);
       if (selectedLocation) queryParams.append("location", selectedLocation);
       if (selectedStatus) queryParams.append("status", selectedStatus);
-
       const response = await fetch(`/api/medicines?${queryParams.toString()}`);
+      const response = await apiClient.get<Medicine[]>(`/api/medicines?${queryParams.toString()}`);
       if (response.ok) {
         let list: Medicine[] = await response.json();
         
@@ -44,7 +40,6 @@ export default function Marketplace() {
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           }
         });
-
         // Hide expired drugs on search pages as they cannot be exchanged under medical safety guidelines
         const activeList = list.filter(m => m.status !== "Expired");
         setMedicines(activeList);
@@ -56,16 +51,13 @@ export default function Marketplace() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchMedicines();
   }, [search, selectedCategory, selectedLocation, selectedStatus, sortBy]);
-
   const handleListingCreated = () => {
     setFormOpen(false);
     fetchMedicines();
   };
-
   return (
     <div id="marketplace-page" className="min-h-screen bg-slate-50 py-8 lg:py-12 font-sans text-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -91,7 +83,6 @@ export default function Marketplace() {
             {formOpen ? "Close Panel" : "List Unused Medicine"}
           </button>
         </div>
-
         {/* Listing Panel Form Overlay */}
         {formOpen && currentUser && (
           <div className="animate-slide-in">
@@ -101,7 +92,6 @@ export default function Marketplace() {
             />
           </div>
         )}
-
         {/* Search controls grid */}
         <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-3.5 items-center">
           
@@ -116,7 +106,6 @@ export default function Marketplace() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-
           {/* Category Selector dropdown */}
           <div>
             <select
@@ -128,7 +117,6 @@ export default function Marketplace() {
               {MEDICINE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-
           {/* Location Selector dropdown */}
           <div>
             <select
@@ -140,7 +128,6 @@ export default function Marketplace() {
               {VIZAG_LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
             </select>
           </div>
-
           {/* Sorting metrics selector */}
           <div>
             <select
@@ -153,9 +140,7 @@ export default function Marketplace() {
               <option value="createdAt">Newest listed first</option>
             </select>
           </div>
-
         </div>
-
         {/* Content body split: map matched node coordinates + listing catalog */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
@@ -179,7 +164,6 @@ export default function Marketplace() {
                     <span className="text-[10px] text-slate-400 block mt-0.5">SevenHills matched drop point assisting inner Dwaraka colony.</span>
                   </div>
                 </div>
-
                 <div className="flex gap-2.5 items-start">
                   <MapPin className="h-5 w-5 text-teal-400 shrink-0 mt-0.5" />
                   <div className="text-left leading-tight">
@@ -188,7 +172,6 @@ export default function Marketplace() {
                   </div>
                 </div>
               </div>
-
               {/* Geographic simulation container */}
               <div className="mt-6 pt-5 border-t border-slate-700">
                 <div className="h-32 bg-slate-950/60 rounded-xl relative overflow-hidden flex items-center justify-center border border-slate-700 text-slate-500">
@@ -199,7 +182,6 @@ export default function Marketplace() {
               </div>
             </div>
           </div>
-
           {/* Main drug list results catalog */}
           <div className="lg:col-span-3 space-y-6">
             
@@ -235,18 +217,14 @@ export default function Marketplace() {
                 ))}
               </div>
             )}
-
             {/* Total count status bar */}
             {!loading && medicines.length > 0 && (
               <div className="text-center text-xs text-slate-400 font-medium">
                 Showing {medicines.length} verified Active listings in Visakhapatnam region. Expiry checks execute automatically.
               </div>
             )}
-
           </div>
-
         </div>
-
       </div>
     </div>
   );
