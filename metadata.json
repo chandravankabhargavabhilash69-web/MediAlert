@@ -1,5 +1,6 @@
 {
   "name": "MediLoop",
+  "name": "MediAlert",
   "description": "A secure, modern medicine exchange and expiry management ecosystem that minimizes medicine wastage and helps communities access unused medicines responsibly.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
