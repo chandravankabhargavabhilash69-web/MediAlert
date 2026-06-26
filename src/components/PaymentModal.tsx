@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import { useApp } from "./AppContext";
 import { CreditCard, ArrowRight, ShieldCheck, Download, Smartphone, X } from "lucide-react";
 import { Exchange } from "../types";
-
+import { apiClient, downloadClientInvoice, isMockDatabaseActive } from "../utils/apiClient";
 interface PaymentModalProps {
   exchange: Exchange;
   onSuccess: (updatedExchange: Exchange) => void;
   onClose: () => void;
 }
-
 export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentModalProps) {
   const { toast } = useApp();
   const [paymentStep, setPaymentStep] = useState<"method" | "processing" | "success">("method");
@@ -33,6 +32,10 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
           currency: "INR",
           exchangeId: exchange.id
         })
+      const orderResp = await apiClient.post<any>("/api/payment/create-order", {
+        amount: exchange.amount,
+        currency: "INR",
+        exchangeId: exchange.id
       });
       
       if (!orderResp.ok) throw new Error("Order creation failed");
@@ -53,6 +56,10 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
               razorpay_payment_id: "pay_rzp_mock_" + Math.random().toString(36).substr(2, 9),
               exchangeId: order.exchangeId
             })
+          const verifyResp = await apiClient.post<any>("/api/payment/verify", {
+            razorpay_order_id: order.id,
+            razorpay_payment_id: "pay_rzp_mock_" + Math.random().toString(36).substr(2, 9),
+            exchangeId: order.exchangeId
           });
           
           if (verifyResp.ok) {
@@ -74,12 +81,15 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
       toast.show("Payment gateway initialization aborted", "error");
     }
   };
-
   const downloadReceipt = () => {
     // Directly triggers the backend plain text receipt generator
     window.location.href = `/api/exchanges/${exchange.id}/pdf`;
+    if (isMockDatabaseActive()) {
+      downloadClientInvoice(exchange);
+    } else {
+      window.location.href = `/api/exchanges/${exchange.id}/pdf`;
+    }
   };
-
   return (
     <div id="payment-gateway-wrapper" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in font-sans">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col">
@@ -88,6 +98,7 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
         <div className="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
           <div>
             <h3 className="font-bold text-slate-900 text-base">MediLoop Secure Checkout</h3>
+            <h3 className="font-bold text-slate-900 text-base">MediAlert Secure Checkout</h3>
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Gateway: Razorpay Native</span>
           </div>
           {paymentStep !== "processing" && (
@@ -99,7 +110,6 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
             </button>
           )}
         </div>
-
         {/* Dynamic Steps */}
         {paymentStep === "method" && (
           <div className="p-6 space-y-5 flex-1">
@@ -112,7 +122,6 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
                 <span className="text-sm font-extrabold text-teal-800">₹{exchange.amount}.00</span>
               </div>
             </div>
-
             {/* Select options */}
             <div className="space-y-1">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Select Payment Method</span>
@@ -137,7 +146,6 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
                   {selectedMethod === "card" && <div className="h-2 w-2 bg-teal-600 rounded-full" />}
                 </div>
               </button>
-
               {/* Option B: UPI (Google Pay, PhonePe, Paytm) */}
               <button
                 onClick={() => setSelectedMethod("upi")}
@@ -159,7 +167,6 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
                 </div>
               </button>
             </div>
-
             {/* Input Details based on selection */}
             {selectedMethod === "card" ? (
               <div className="p-3.5 bg-slate-50 rounded-xl space-y-3 font-mono text-xs">
@@ -206,7 +213,6 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
                 <span className="text-[9px] text-slate-400 font-sans block mt-1">A prompt notification will simulate on authorization step.</span>
               </div>
             )}
-
             {/* Pay Button */}
             <button
               onClick={handlePaymentInitiation}
@@ -222,7 +228,6 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
             </div>
           </div>
         )}
-
         {{
           processing: (
             <div className="p-10 text-center space-y-5 flex-grow flex flex-col justify-center items-center">
@@ -247,14 +252,12 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
                   Seamless match point order established. Preventing waste & helping the community.
                 </p>
               </div>
-
               {/* Transaction block */}
               <div className="w-full p-4 bg-slate-50 border border-slate-100 rounded-xl text-left font-mono text-[10px] text-slate-600 space-y-1">
                 <div>ORDER ID: <span className="font-bold text-slate-900">OR_RZP_MATCH_881</span></div>
                 <div>METHOD: <span className="font-bold text-slate-900">{selectedMethod.toUpperCase()}</span></div>
                 <div>STATE: <span className="text-emerald-600 font-bold">PAID SECURE</span></div>
               </div>
-
               <div className="flex flex-col gap-2.5 w-full">
                 <button
                   onClick={downloadReceipt}
@@ -273,7 +276,6 @@ export default function PaymentModal({ exchange, onSuccess, onClose }: PaymentMo
             </div>
           )
         }[paymentStep as "processing" | "success"]}
-
       </div>
     </div>
   );
