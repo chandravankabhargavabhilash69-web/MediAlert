@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MediLoop - Connecting Care. Reducing Waste.</title>
+    <title>MediAlert - Connecting Care. Reducing Waste.</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
   </head>
@@ -16,12 +17,13 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').then(reg => {
             console.log('MediLoop ServiceWorker registered successfully:', reg.scope);
+            console.log('MediAlert ServiceWorker registered successfully:', reg.scope);
           }).catch(err => {
             console.log('MediLoop ServiceWorker registration failed:', err);
+            console.log('MediAlert ServiceWorker registration failed:', err);
           });
         });
       }
     </script>
   </body>
 </html>
-
