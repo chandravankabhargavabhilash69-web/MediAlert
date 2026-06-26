@@ -1,0 +1,18 @@
+{
+  "short_name": "MediLoop",
+  "name": "MediLoop Medicine Exchange & Expiry",
+  "short_name": "MediAlert",
+  "name": "MediAlert Medicine Exchange & Expiry",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#F3F4F6",
+  "theme_color": "#0F766E",
+  "display": "standalone",
+  "orientation": "portrait"
+}
