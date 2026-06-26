@@ -2,11 +2,9 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
-
 // Constants
 const PORT = 3000;
 const DB_FILE = path.join(process.cwd(), "db.json");
-
 // Define types
 interface User {
   id: string;
@@ -14,7 +12,6 @@ interface User {
   role: "user" | "admin";
   createdAt: string;
 }
-
 interface Medicine {
   id: string;
   medicineName: string;
@@ -33,7 +30,6 @@ interface Medicine {
   listedBy: string;
   createdAt: string;
 }
-
 interface Exchange {
   id: string;
   medicineId: string;
@@ -47,7 +43,6 @@ interface Exchange {
   recipientLocation: string;
   createdAt: string;
 }
-
 interface Notification {
   id: string;
   userId: string;
@@ -57,13 +52,11 @@ interface Notification {
   read: boolean;
   createdAt: string;
 }
-
 // Initial Seeding Data
 const initialUsers = [
   { id: "usr_1", username: "MedUser", role: "user", createdAt: new Date("2026-01-10").toISOString() },
   { id: "usr_admin", username: "AdminUser", role: "admin", createdAt: new Date("2026-01-01").toISOString() }
 ];
-
 const initialMedicines: Medicine[] = [
   {
     id: "med_1",
@@ -156,7 +149,6 @@ const initialMedicines: Medicine[] = [
     createdAt: new Date("2026-05-01").toISOString()
   }
 ];
-
 // Load Database
 function loadDB() {
   try {
@@ -170,6 +162,7 @@ function loadDB() {
             id: "not_1",
             userId: "usr_1",
             title: "👋 Welcome to MediLoop!",
+            title: "👋 Welcome to MediAlert!",
             message: "Verify your profile and start contributing responsibly. Reducing pharmaceutical waste together.",
             type: "success",
             read: false,
@@ -196,7 +189,6 @@ function loadDB() {
     return { users: initialUsers, medicines: initialMedicines, exchanges: [], notifications: [] };
   }
 }
-
 // Save Database
 function saveDB(data: any) {
   try {
@@ -205,12 +197,10 @@ function saveDB(data: any) {
     console.error("Database write failed", error);
   }
 }
-
 // Initialize Server
 async function startServer() {
   const app = express();
   app.use(express.json());
-
   // Security elements
   app.use((req, res, next) => {
     res.setHeader("X-Frame-Options", "DENY");
@@ -218,10 +208,8 @@ async function startServer() {
     res.setHeader("X-XSS-Protection", "1; mode=block");
     next();
   });
-
   // Load db cache
   let db = loadDB();
-
   // Helper routine to recalculate Expiry Color categories based on Reference Local Time (2026-06-10)
   const calculateMedicineStatus = (expiryDateStr: string): "Verified" | "Expiring Soon" | "Expired" => {
     const today = new Date("2026-06-10");
@@ -237,9 +225,7 @@ async function startServer() {
       return "Verified";
     }
   };
-
   // --- API ROUTING HANDLERS ---
-
   // 1. AUTHENTICATION ROUTING
   app.post("/api/auth/login", (req, res) => {
     const { username, password } = req.body;
@@ -247,7 +233,6 @@ async function startServer() {
     if (!username || !password) {
       return res.status(400).json({ error: "Username and password are required" });
     }
-
     // Demands hardcoded credentials check
     if (username === "MedUser" && password === "123456") {
       const user = db.users.find(u => u.username === "MedUser") || { id: "usr_1", username: "MedUser", role: "user" };
@@ -256,7 +241,6 @@ async function startServer() {
         user: { ...user, role: "user" }
       });
     }
-
     if (username === "AdminUser" && password === "Admin@123") {
       const user = db.users.find(u => u.username === "AdminUser") || { id: "usr_admin", username: "AdminUser", role: "admin" };
       return res.status(200).json({
@@ -264,7 +248,6 @@ async function startServer() {
         user: { ...user, role: "admin" }
       });
     }
-
     // Dynamic checks
     const matched = db.users.find((u: any) => u.username.toLowerCase() === username.toLowerCase());
     if (matched && password === "123456") { // allow 123456 as standard dev pass code
@@ -273,22 +256,18 @@ async function startServer() {
         user: matched
       });
     }
-
     return res.status(401).json({ error: "Invalid username or password pattern" });
   });
-
   app.post("/api/auth/register", (req, res) => {
     const { username, email } = req.body;
     if (!username || !email) {
       return res.status(400).json({ error: "Username and email are required" });
     }
-
     // Check duplication
     const dup = db.users.find((u: any) => u.username.toLowerCase() === username.toLowerCase() || u.email?.toLowerCase() === email.toLowerCase());
     if (dup) {
       return res.status(409).json({ error: "Username or Email already exists" });
     }
-
     const newUser = {
       id: "usr_" + Math.random().toString(36).substr(2, 9),
       username,
@@ -296,7 +275,6 @@ async function startServer() {
       role: "user" as const,
       createdAt: new Date().toISOString()
     };
-
     db.users.push(newUser);
     
     // Add custom welcome alert
@@ -309,7 +287,6 @@ async function startServer() {
       read: false,
       createdAt: new Date().toISOString()
     });
-
     saveDB(db);
     return res.status(201).json({
       message: "Registration successful!",
@@ -317,20 +294,17 @@ async function startServer() {
       token: `mock-jwt-token-${newUser.id}`
     });
   });
-
   // 2. MEDICINE ENDPOINTS
   app.get("/api/medicines", (req, res) => {
     db = loadDB();
     const { search, category, location, status, minExpiryDays, listedBy } = req.query;
     
     let filtered: Medicine[] = [...db.medicines];
-
     // Auto-update status values based on current simulation date 2026-06-10
     filtered = filtered.map(m => ({
       ...m,
       status: calculateMedicineStatus(m.expiryDate)
     }));
-
     if (search) {
       const q = String(search).toLowerCase();
       filtered = filtered.filter(m => 
@@ -340,27 +314,21 @@ async function startServer() {
         m.description.toLowerCase().includes(q)
       );
     }
-
     if (category) {
       filtered = filtered.filter(m => m.category === String(category));
     }
-
     if (location) {
       filtered = filtered.filter(m => m.location === String(location));
     }
-
     if (status) {
       filtered = filtered.filter(m => m.status === String(status));
     }
-
     if (listedBy) {
       filtered = filtered.filter(m => m.listedBy === String(listedBy));
     }
-
     // Nearest location medicine matching indicator
     res.json(filtered);
   });
-
   app.get("/api/medicines/:id", (req, res) => {
     db = loadDB();
     const med = db.medicines.find((m: any) => m.id === req.params.id);
@@ -371,21 +339,17 @@ async function startServer() {
     med.status = calculateMedicineStatus(med.expiryDate);
     res.json(med);
   });
-
   app.post("/api/medicines", (req, res) => {
     const { 
       medicineName, manufacturer, batchNumber, manufactureDate, expiryDate, 
       quantity, category, prescriptionRequired, medicineImages, location, description,
       listedBy 
     } = req.body;
-
     if (!medicineName || !expiryDate || !location || !quantity) {
       return res.status(400).json({ error: "Missing required medicine parameters" });
     }
-
     const calculatedStatus = calculateMedicineStatus(expiryDate);
     const requiresAdminApproval = prescriptionRequired === true;
-
     const newMed: Medicine = {
       id: "med_" + Math.random().toString(36).substr(2, 9),
       medicineName,
@@ -404,9 +368,7 @@ async function startServer() {
       listedBy: listedBy || "usr_1",
       createdAt: new Date().toISOString()
     };
-
     db.medicines.push(newMed);
-
     // Push notification to Admin if prescription list
     if (requiresAdminApproval) {
       db.notifications.push({
@@ -430,28 +392,23 @@ async function startServer() {
         createdAt: new Date().toISOString()
       });
     }
-
     saveDB(db);
     res.status(201).json(newMed);
   });
-
   app.put("/api/medicines/:id", (req, res) => {
     db = loadDB();
     const index = db.medicines.findIndex((m: any) => m.id === req.params.id);
     if (index === -1) {
       return res.status(404).json({ error: "Medicine not found" });
     }
-
     db.medicines[index] = {
       ...db.medicines[index],
       ...req.body,
       status: calculateMedicineStatus(req.body.expiryDate || db.medicines[index].expiryDate)
     };
-
     saveDB(db);
     res.json(db.medicines[index]);
   });
-
   app.delete("/api/medicines/:id", (req, res) => {
     db = loadDB();
     const initialLen = db.medicines.length;
@@ -462,14 +419,12 @@ async function startServer() {
     saveDB(db);
     res.json({ message: "Medicine Listing deleted successfully" });
   });
-
   app.post("/api/medicines/:id/verify", (req, res) => {
     db = loadDB();
     const med = db.medicines.find((m: any) => m.id === req.params.id);
     if (!med) {
       return res.status(404).json({ error: "Medicine not found" });
     }
-
     med.verified = true;
     
     // Add verify confirmation alert
@@ -482,11 +437,9 @@ async function startServer() {
       read: false,
       createdAt: new Date().toISOString()
     });
-
     saveDB(db);
     res.json({ message: "Medicine marked verified successfully", medicine: med });
   });
-
   // 3. EXCHANGE & DONATE TRANSACTION ENDPOINTS
   app.get("/api/exchanges", (req, res) => {
     db = loadDB();
@@ -498,20 +451,16 @@ async function startServer() {
     }
     res.json(list);
   });
-
   app.post("/api/exchanges", (req, res) => {
     const { medicineId, requestedBy, type, recipientLocation, amount } = req.body;
     db = loadDB();
-
     const med = db.medicines.find((m: any) => m.id === medicineId);
     if (!med) {
       return res.status(404).json({ error: "Medicine listing not found" });
     }
-
     if (med.status === "Expired") {
       return res.status(400).json({ error: "Expired medicines cannot be swapped or exchanged." });
     }
-
     const exchange: Exchange = {
       id: "exc_" + Math.random().toString(36).substr(2, 9),
       medicineId,
@@ -524,9 +473,7 @@ async function startServer() {
       recipientLocation: recipientLocation || "Visakhapatnam Local",
       createdAt: new Date().toISOString()
     };
-
     db.exchanges.push(exchange);
-
     // If exchange or donate, decrease medicine count or mark completed
     if (type !== "Buy") {
       med.quantity = Math.max(0, med.quantity - 1);
@@ -534,7 +481,6 @@ async function startServer() {
         // Soft archive or mark as completed swap
       }
     }
-
     // Add alert for medicine owner
     db.notifications.push({
       id: "not_" + Date.now(),
@@ -545,18 +491,15 @@ async function startServer() {
       read: false,
       createdAt: new Date().toISOString()
     });
-
     saveDB(db);
     res.status(201).json(exchange);
   });
-
   // 4. PAYMENTS & ORDER CREATION (RAZORPAY IMPLEMENTATION SIM)
   app.post("/api/payment/create-order", (req, res) => {
     const { amount, currency, exchangeId } = req.body;
     if (!exchangeId) {
       return res.status(400).json({ error: "Exchange transaction ID is required" });
     }
-
     // Simulate creation of a Razorpay Order
     const dummyOrderId = "order_rzp_" + Math.floor(Math.random() * 9000000 + 1000000);
     res.json({
@@ -566,26 +509,21 @@ async function startServer() {
       exchangeId: exchangeId
     });
   });
-
   app.post("/api/payment/verify", (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, exchangeId } = req.body;
     db = loadDB();
-
     const currentExchange = db.exchanges.find((e: any) => e.id === exchangeId);
     if (!currentExchange) {
       return res.status(404).json({ error: "Exchange transaction record not found" });
     }
-
     // Mark paid & completed
     currentExchange.status = "Paid";
     currentExchange.paymentId = razorpay_payment_id || "pay_rzp_" + Math.floor(Math.random() * 9000 + 1000);
-
     // Update quantity for listing
     const med = db.medicines.find((m: any) => m.id === currentExchange.medicineId);
     if (med) {
       med.quantity = Math.max(0, med.quantity - 1);
     }
-
     // Create success alert
     db.notifications.push({
       id: "not_" + Date.now(),
@@ -596,11 +534,9 @@ async function startServer() {
       read: false,
       createdAt: new Date().toISOString()
     });
-
     saveDB(db);
     res.json({ verified: true, exchange: currentExchange });
   });
-
   // Download high-fidelity transaction invoice PDF (rendered directly as beautiful client download text format)
   app.get("/api/exchanges/:id/pdf", (req, res) => {
     db = loadDB();
@@ -608,9 +544,9 @@ async function startServer() {
     if (!currentExchange) {
       return res.status(404).json({ error: "Transaction not found" });
     }
-
     const receiptContent = `=====================================================
                       MEDILOOP INVOICE
+                      MEDIALERT INVOICE
                Connecting Care. Reducing Waste.
 =====================================================
 Receipt ID:     RCP-${currentExchange.id.toUpperCase()}
@@ -630,13 +566,13 @@ Eco Footprint:   +0.45kg pharma wastes prevented!
 =====================================================
             Thank you for helping our community!
                 https://mediloop-care.org
+                https://medialert-care.org
 =====================================================`;
     
     res.setHeader("Content-Disposition", `attachment; filename="Invoice-${currentExchange.id}.txt"`);
     res.setHeader("Content-Type", "text/plain");
     res.send(receiptContent);
   });
-
   // 5. ANALYTICS & STATS ENDPOINTS
   app.get("/api/analytics", (req, res) => {
     db = loadDB();
@@ -648,16 +584,13 @@ Eco Footprint:   +0.45kg pharma wastes prevented!
     let greenCount = 0;
     let yellowCount = 0;
     let redCount = 0;
-
     db.medicines.forEach((m: any) => {
       const state = calculateMedicineStatus(m.expiryDate);
       if (state === "Verified") greenCount++;
       else if (state === "Expiring Soon") yellowCount++;
       else redCount++;
     });
-
     const successExchanges = db.exchanges.filter((e: any) => e.status === "Paid" || e.status === "Approved" || e.status === "Completed").length;
-
     res.json({
       countTotal,
       countVerified,
@@ -674,7 +607,6 @@ Eco Footprint:   +0.45kg pharma wastes prevented!
       }))
     });
   });
-
   // 6. NOTIFICATION SYSTEM
   app.get("/api/alerts", (req, res) => {
     db = loadDB();
@@ -685,7 +617,6 @@ Eco Footprint:   +0.45kg pharma wastes prevented!
     const myAlerts = db.notifications.filter((n: any) => n.userId === String(userId));
     res.json(myAlerts);
   });
-
   app.post("/api/alerts/mark-read", (req, res) => {
     const { userId } = req.body;
     db = loadDB();
@@ -697,7 +628,6 @@ Eco Footprint:   +0.45kg pharma wastes prevented!
     saveDB(db);
     res.json({ success: true });
   });
-
   // 7. CRON EXPIRY MONITORING SIMULATION
   app.post("/api/cron/check-expiry", (req, res) => {
     db = loadDB();
@@ -709,7 +639,6 @@ Eco Footprint:   +0.45kg pharma wastes prevented!
       if (priorStatus !== computed) {
         m.status = computed;
         expiriesUpdated++;
-
         if (computed === "Expired") {
           db.notifications.push({
             id: "not_cron_" + Date.now() + Math.random().toString(36).substr(2, 4),
@@ -723,14 +652,11 @@ Eco Footprint:   +0.45kg pharma wastes prevented!
         }
       }
     });
-
     if (expiriesUpdated > 0) {
       saveDB(db);
     }
-
     res.json({ success: true, updatedCount: expiriesUpdated });
   });
-
   // --- DEV & PRODUCTION BINDINGS ---
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -745,12 +671,11 @@ Eco Footprint:   +0.45kg pharma wastes prevented!
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
-
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`MediLoop Server active on http://0.0.0.0:${PORT}`);
+    console.log(`MediAlert Server active on http://0.0.0.0:${PORT}`);
   });
 }
-
 startServer().catch((err) => {
   console.error("Critical server boot malfunction", err);
 });
