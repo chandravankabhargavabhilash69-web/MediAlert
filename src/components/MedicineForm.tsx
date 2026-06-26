@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import { useApp } from "./AppContext";
 import { VIZAG_LOCATIONS, MEDICINE_CATEGORIES, Medicine } from "../types";
 import { AlertCircle, FilePlus2, CheckCircle2 } from "lucide-react";
-
+import { apiClient } from "../utils/apiClient";
 interface MedicineFormProps {
   onSuccess: (newMed: Medicine) => void;
   onCancel: () => void;
   initialData?: Medicine;
 }
-
 export default function MedicineForm({ onSuccess, onCancel, initialData }: MedicineFormProps) {
   const { currentUser, toast } = useApp();
   
@@ -25,13 +24,10 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
     description: initialData?.description || "",
     medicineImages: initialData?.medicineImages || []
   });
-
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
   // Expiry check warning helper
   const [isNearExpiryWarning, setIsNearExpiryWarning] = useState(false);
-
   const handleDateChange = (dateVal: string) => {
     setFormData(prev => ({ ...prev, expiryDate: dateVal }));
     
@@ -47,7 +43,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
       setIsNearExpiryWarning(false);
     }
   };
-
   const handleAddImage = () => {
     if (!imageUrlInput.trim()) return;
     setFormData(prev => ({
@@ -56,49 +51,46 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
     }));
     setImageUrlInput("");
   };
-
   const handleRemoveImage = (index: number) => {
     setFormData(prev => ({
       ...prev,
       medicineImages: prev.medicineImages.filter((_, i) => i !== index)
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.medicineName.trim() || !formData.expiryDate || !formData.location || formData.quantity <= 0) {
       toast.show("Please fill in all mandatory medicine details", "error");
       return;
     }
-
     if (isNearExpiryWarning) {
       const confirmWarning = window.confirm("⚠️ This medicine is expiring in less than 30 days. Are you sure you want to list this? Expired medicines cannot be exchanged.");
       if (!confirmWarning) return;
     }
-
     setSubmitting(true);
     try {
       const isEdit = !!initialData;
       const apiEndpoint = isEdit ? `/api/medicines/${initialData.id}` : "/api/medicines";
       const method = isEdit ? "PUT" : "POST";
-
       const payload = {
         ...formData,
         listedBy: currentUser?.id || "usr_1"
       };
-
       const resp = await fetch(apiEndpoint, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-
+      const resp = isEdit
+        ? await apiClient.put<Medicine>(apiEndpoint, payload)
+        : await apiClient.post<Medicine>(apiEndpoint, payload);
       if (resp.ok) {
         const savedMed = await resp.json();
         toast.show(isEdit ? "Listing updated successfully!" : "Medicine listed successfully!", "success");
         onSuccess(savedMed);
       } else {
         const err = await resp.json();
+        const err = await resp.json() as any;
         toast.show(err.error || "Save list action aborted", "error font-sans");
       }
     } catch (err) {
@@ -108,7 +100,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
       setSubmitting(false);
     }
   };
-
   return (
     <form id="medicine-listing-form" onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-xl space-y-6 font-sans text-slate-800">
       <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
@@ -122,7 +113,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
           <p className="text-xs text-slate-500">Provide medical details carefully to preserve community security.</p>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Name and manufacturer */}
         <div className="space-y-4">
@@ -137,7 +127,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
               onChange={e => setFormData(p => ({ ...p, medicineName: e.target.value }))}
             />
           </div>
-
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-1">Manufacturer / Drug Brand</label>
             <input 
@@ -148,7 +137,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
               onChange={e => setFormData(p => ({ ...p, manufacturer: e.target.value }))}
             />
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">Batch Number</label>
@@ -173,7 +161,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
               />
             </div>
           </div>
-
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-1">Medicine Category</label>
             <select
@@ -185,7 +172,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
             </select>
           </div>
         </div>
-
         {/* Expiry alerts and details */}
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -209,7 +195,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
               />
             </div>
           </div>
-
           {/* Prompt warning box if <30 days */}
           {isNearExpiryWarning && (
             <div className="p-3 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl flex gap-2 items-start text-xs animate-pulse-slow">
@@ -220,7 +205,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
               </div>
             </div>
           )}
-
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-1">Primary Match Location <span className="text-rose-500">*</span></label>
             <select
@@ -232,7 +216,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
             </select>
             <span className="text-[10px] text-slate-400 font-medium tracking-wide mt-1 block">Visakhapatnam green zone municipal coordination network.</span>
           </div>
-
           {/* Toggle for prescription REQUIRED */}
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
             <div>
@@ -251,7 +234,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
           </div>
         </div>
       </div>
-
       {/* Description text */}
       <div>
         <label className="text-xs font-bold text-slate-700 block mb-1">Storage Condition & Extra Description</label>
@@ -263,7 +245,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
           onChange={e => setFormData(p => ({ ...p, description: e.target.value }))}
         />
       </div>
-
       {/* Images integration */}
       <div className="space-y-2.5">
         <label className="text-xs font-bold text-slate-700 block mb-1">Medicine Image (URLs)</label>
@@ -303,7 +284,6 @@ export default function MedicineForm({ onSuccess, onCancel, initialData }: Medic
           )}
         </div>
       </div>
-
       <div className="flex justify-end gap-3 border-t border-slate-100 pt-5">
         <button
           type="button"
