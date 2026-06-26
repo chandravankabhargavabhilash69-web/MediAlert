@@ -2,25 +2,20 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "./AppContext";
 import { Recycle, Pill, Bell, Menu, X, User, LogOut, LogIn, ShieldAlert } from "lucide-react";
-
 export default function Navbar() {
   const { currentUser, logout, notifications, markNotificationsAsRead } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-
   const unreadCount = notifications.filter(n => !n.read).length;
-
   const handleNotifClick = () => {
     setNotifMenuOpen(!notifMenuOpen);
     if (!notifMenuOpen && unreadCount > 0) {
       markNotificationsAsRead();
     }
   };
-
   const isActive = (path: string) => location.pathname === path;
-
   return (
     <nav id="app-navigation-bar" className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all duration-200 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,10 +26,12 @@ export default function Navbar() {
             <Link to="/" className="flex items-center gap-3 group">
               <div className="h-10 w-10 overflow-hidden rounded-xl flex items-center justify-center bg-teal-50 group-hover:scale-105 transition-all duration-300">
                 <img src="/logo.svg" alt="MediLoop" className="h-8 w-8" />
+                <img src="/logo.svg" alt="MediAlert" className="h-8 w-8" />
               </div>
               <div>
                 <span className="text-xl font-bold text-slate-900 tracking-tight block">
                   Medi<span className="text-teal-600">Loop</span>
+                  Medi<span className="text-teal-600">Alert</span>
                 </span>
                 <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase block -mt-1">
                   Connecting Care
@@ -42,7 +39,6 @@ export default function Navbar() {
               </div>
             </Link>
           </div>
-
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-1 lg:space-x-3">
             <Link
@@ -72,7 +68,6 @@ export default function Navbar() {
               </Link>
             )}
           </div>
-
           {/* Right Action Section */}
           <div className="hidden md:flex items-center space-x-4">
             
@@ -91,7 +86,6 @@ export default function Navbar() {
                     </span>
                   )}
                 </button>
-
                 {/* Notifications Panel Box */}
                 {notifMenuOpen && (
                   <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden font-sans">
@@ -135,7 +129,6 @@ export default function Navbar() {
                 )}
               </div>
             )}
-
             {/* Active User session info */}
             {currentUser ? (
               <div className="flex items-center space-x-3">
@@ -171,9 +164,7 @@ export default function Navbar() {
                 Get Started
               </Link>
             )}
-
           </div>
-
           {/* Mobile Menu Icon */}
           <div className="flex items-center md:hidden">
             <button
@@ -183,10 +174,8 @@ export default function Navbar() {
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
-
         </div>
       </div>
-
       {/* Mobile Drawer Navigation Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-slate-100 py-3 px-4 space-y-2 animate-slide-in font-sans">
